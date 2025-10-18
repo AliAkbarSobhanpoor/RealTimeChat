@@ -1,0 +1,14 @@
+# for django template
+[tool.djlint]
+ignore = "H006,H013"
+max_line_length = 120
+indent = 4
+
+# for ruff formater
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "tab"
+docstring-code-format = true
