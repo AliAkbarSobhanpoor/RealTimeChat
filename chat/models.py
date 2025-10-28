@@ -22,5 +22,5 @@ class ChatMessage(models.Model):
         return f"Message from {self.author} in {self.channel}: {self.message[:20]}..."
 
     class Meta:
-        ordering = ['timestamp'] # newest to the oldest
+        ordering = ['-timestamp'] # newest to the oldest
         
