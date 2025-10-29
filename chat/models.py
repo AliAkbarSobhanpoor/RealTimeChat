@@ -6,7 +6,7 @@ User = get_user_model()
 
 class ChatChannels(models.Model):
     channel_name = models.CharField(max_length=100, unique=True)
-
+    users_online = models.ManyToManyField(User, related_name="online_channels", blank=True)
 
     def __str__(self):
         return self.channel_name
