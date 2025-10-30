@@ -8,6 +8,7 @@ import json
 
 
 class ChatChannelConsumer(AsyncWebsocketConsumer):
+    
     @staticmethod
     async def aget_object_or_404(klass, *args, **kwargs):    
         if hasattr(klass, 'aget'):
@@ -22,6 +23,7 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
         except queryset.model.DoesNotExist:
             raise Http404(f"No {model_name} matches the given query.")
         
+    
     async def connect(self):
         self.user = self.scope["user"]
         self.chat_channel_name = self.scope["url_route"]["kwargs"]["channel_name"]
@@ -37,6 +39,7 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
             
         await self.accept()
 
+    
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.chat_channel_name, self.channel_name
@@ -49,6 +52,7 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
             
 
     async def receive(self, text_data=None, bytes_data=None):
+        # this is a place for receiving content form the websocket connection
         text_data_json = json.loads(text_data)
         message = text_data_json.get("message", "")
         saved_message = await ChatMessage.objects.acreate(
@@ -64,12 +68,16 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_send(self.chat_channel_name, event)
     
+    
     @staticmethod
     @sync_to_async
     def render_message_html(partial, context):
+        # base for render the html message for group send . work with asyncWebsocketConsumer
         return render_to_string(partial, context)
     
+    
     async def message_handler(self, event):
+        # handler for broadcasting new messages
         message_id = event.get("message_id")
         message = await self.aget_object_or_404(ChatMessage, id=message_id)
         html = await self.render_message_html("chat/partial/message_partial.html", {
@@ -77,6 +85,7 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
             "user": self.user
         }) 
         await self.send(text_data=html)
+    
         
     async def update_online_users_count(self):
         online_count = await sync_to_async(self.channel.users_online.count)() - 1
@@ -86,7 +95,8 @@ class ChatChannelConsumer(AsyncWebsocketConsumer):
         }
         await self.channel_layer.group_send(self.chat_channel_name, event)
     
+    # handler for broadcasting online user count.
     async def online_count_handler(self, event):
         online_count = event["online_count"]
         html = await self.render_message_html("chat/partial/online_count.html", {"online_count": online_count})
-        await self.send(text_data=html)
+        await self.send(text_data=html) 

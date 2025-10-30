@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-
+import shortuuid
 User = get_user_model()
 
 
 class ChatChannels(models.Model):
-    channel_name = models.CharField(max_length=100, unique=True)
+    channel_name = models.CharField(max_length=100, unique=True, default=shortuuid.uuid)
     users_online = models.ManyToManyField(User, related_name="online_channels", blank=True)
+    members = models.ManyToManyField(User, related_name="chat_channels", blank=True)
+    is_private = models.BooleanField(default=False)
 
     def __str__(self):
         return self.channel_name
