@@ -18,3 +18,9 @@
         }
     </style>
 </span>
+
+{% if online_count %}
+    <div id="online-icon" class="green-dot absolute top-2 left-2"></div>
+{% else %}
+    <div id="online-icon" class="gray-dot absolute top-2 left-2"></div>
+{% endif %}
