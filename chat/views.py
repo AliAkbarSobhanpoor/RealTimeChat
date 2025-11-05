@@ -1,10 +1,12 @@
-from django.http import Http404
-from django.shortcuts import redirect, render
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 import chat
-from .models import ChatChannels
+from .models import ChatChannels, ChatMessage
 from django.contrib.auth.decorators import login_required
 from .forms import ChatMessageForm
 from django.contrib.auth import get_user_model
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 User = get_user_model()
 
@@ -54,3 +56,25 @@ def get_or_create_channel(request, username):
         chat_channel.members.add(request.user, other_user)
     
     return redirect("private_chat_channel", channel_name=chat_channel.channel_name)
+
+
+
+def chat_file_upload(request, channel_name):
+    chat_channel = get_object_or_404(ChatChannels, channel_name=channel_name)
+
+    if request.htmx and request.FILES:
+        uploaded_file = request.FILES['file']
+        
+        message = ChatMessage.objects.create(
+            file=uploaded_file,
+            author=request.user,
+            channel=chat_channel
+        )
+        
+        channel_layer = get_channel_layer()
+        event = {
+            "type": "message_handler",
+            "message_id": message.id,
+        }
+        async_to_sync(channel_layer.group_send)(chat_channel.channel_name, event)
+    return HttpResponse(status=200)
